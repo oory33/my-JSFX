@@ -1,0 +1,139 @@
+desc:Ring Buffer Reverberator(my)
+
+slider1:39.85<1,150,.01>C1 Delay time [ms]
+slider2:0.87<0, 1, .01>C1 Gain
+slider3:36.10<1,150,.01>C2 Delay time [ms]
+slider4:0.88<0, 1, .01>C2 Gain
+slider5:33.27<1,150,.01>C3 Delay time [ms]
+slider6:0.89<0, 1, .01>C3 Gain
+slider7:30.15<1,150,.01>C4 Delay time [ms]
+slider8:0.90<0, 1, .01>C4 Gain
+slider9:5.0<1, 50,.1>APF1 Delay time [ms]
+slider10:0.7<0, 1, .01>APF1 Gain
+slider11:1.7<1, 50,.1>APF2 Delay time [ms]
+slider12:0.7<0, 1, .01>APF2 Gain
+slider13:0.8<0, 1, .01>Early Reflection
+slider14:0.4<0, 1, .01>Post Reflection
+slider15:0.7<0, 1, .01>Master Gain
+
+in_pin:fxin_L
+in_pin:fxin_R
+out_pin:fxout_L
+out_pin:fxout_R
+
+@init
+buflength = srate * 0.5;  //  500 ms
+buf1 = 0; //  buffer  exists at offset 0
+buf1posR = 0; 
+buf1posW = 1913;
+buf2 = buf1 + buflength;
+buf2posR = buf2; 
+buf2posW = buf2 + 1733;
+buf3 = buf2 + buflength;
+buf3posR = buf3; 
+buf3posW = buf3 + 1597;
+buf4 = buf3 + buflength;
+buf4posR = buf4; 
+buf4posW = buf4 + 1448;
+buf5 = buf4 + buflength;
+buf5posR = buf5; 
+buf5posW = buf5 + 240;
+buf6 = buf5 + buflength;
+buf6posR = buf6; 
+buf6posW = buf6 + 82;
+
+@slider
+delay1 = srate * slider1 / 1000.0;
+delay2 = srate * slider3 / 1000.0;
+delay3 = srate * slider5 / 1000.0;
+delay4 = srate * slider7 / 1000.0;
+buf1posW = buf1posR + ceil(delay1);
+buf2posW = buf2posR + ceil(delay2);
+buf3posW = buf3posR + ceil(delay3);
+buf4posW = buf4posR + ceil(delay4);
+delay5 = srate * slider9 / 1000.0;
+delay6 = srate * slider11 / 1000.0;
+buf5posW = buf5posR + ceil(delay5);
+buf6posW = buf6posR + ceil(delay6);
+g1 = slider2;
+g2 = slider4;
+g3 = slider6;
+g4 = slider8;
+g5 = slider10;
+g6 = slider12;
+ge = slider13;
+gp = slider14;
+g = slider15;
+
+@sample  
+x = spl0;
+
+c1 = buf1[buf1posR]; 
+buf1[buf1posW] = x + (buf1[buf1posR] * g1); 
+c2 = buf2[buf2posR]; 
+buf2[buf2posW] = x + (buf2[buf2posR] * g2);
+c3 = buf3[buf3posR]; 
+buf3[buf3posW] = x + (buf3[buf3posR] * g3);
+c4 = buf4[buf4posR]; 
+buf4[buf4posW] = x + (buf4[buf4posR] * g4);
+
+ com = (c1 + c2 + c3 + c4) / 4;
+
+apf1 = buf5[buf5posR] + (com * (-1) * g5);
+buf5[buf5posW] = com + (buf5[buf5posR] * g5);
+apf2 = buf6[buf6posR] + (apf1 * (-1) * g6);
+buf6[buf6posW] = apf1 + (buf6[buf6posR] * g6);
+
+spl0 = (x * ge + apf2 * gp) * g;
+
+
+x = spl1;
+
+c1 = buf1[buf1posR]; 
+buf1[buf1posW] = x + (buf1[buf1posR] * g1); 
+c2 = buf2[buf2posR]; 
+buf2[buf2posW] = x + (buf2[buf2posR] * g2);
+c3 = buf3[buf3posR]; 
+buf3[buf3posW] = x + (buf3[buf3posR] * g3);
+c4 = buf4[buf4posR]; 
+buf4[buf4posW] = x + (buf4[buf4posR] * g4);
+
+ com = (c1 + c2 + c3 + c4) / 4;
+
+apf1 = buf5[buf5posR] + (com * (-1) * g5);
+buf5[buf5posW] = com + (buf5[buf5posR] * g5);
+apf2 = buf6[buf6posR] + (apf1 * (-1) * g6);
+buf6[buf6posW] = apf1 + (buf6[buf6posR] * g6);
+
+spl1 = (x * ge + apf2 * gp) * g;
+
+
+buf1posR = buf1posR + 1 ;
+buf1posR > buflength ? buf1posR = 0;
+buf1posW = buf1posW + 1 ;
+buf1posW > buflength ? buf1posW = 0;
+
+buf2posR = buf2posR + 1 ;
+buf2posR > buf2 + buflength ? buf2posR = buf2;
+buf2posW = buf2posW + 1 ;
+buf2posW > buf2 + buflength ? buf2posW = buf2;
+
+buf3posR = buf3posR + 1 ;
+buf3posR > buf3 + buflength ? buf3posR = buf3;
+buf3posW = buf3posW + 1 ;
+buf3posW > buf3 + buflength ? buf3posW = buf3;
+
+buf4posR = buf4posR + 1 ;
+buf4posR > buf4 + buflength ? buf4posR = buf4;
+buf4posW = buf4posW + 1 ;
+buf4posW > buf4 + buflength ? buf4posW = buf4;
+
+buf5posR = buf5posR + 1 ;
+buf5posR > buf5 + buflength ? buf5posR = buf5;
+buf5posW = buf5posW + 1 ;
+buf5posW > buf5 + buflength ? buf5posW = buf5;
+
+buf6posR = buf6posR + 1 ;
+buf6posR > buf6 + buflength ? buf6posR = buf6;
+buf6posW = buf6posW + 1 ;
+buf6posW > buf6 + buflength ? buf6posW = buf6;

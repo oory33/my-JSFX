@@ -1,0 +1,33 @@
+desc:Ring Buffer Delay(my)
+
+slider1:250<1,500,1>Delay time [ms]
+slider2:40<0,100,1>Feedback [%]
+in_pin:fxin_L
+in_pin:fxin_R
+out_pin:fxout_L
+out_pin:fxout_R
+
+@init
+buf = 0; //  buffer  exists at offset 0
+bufposR = 0; 
+bufposW = srate * 1 / 10;
+buflength = srate * 0.5;  //  500 ms
+
+@slider
+delay = srate * slider1 / 1000.0; //  # of samples
+fb = slider2 / 100; 
+bufposW = delay;
+ 
+@sample  
+x = spl0;  
+spl0 = buf[bufposR] + x; 
+buf[bufposW] = x + (buf[bufposR] * fb); 
+ 
+x = spl1;
+spl1 = buf2[bufposR] + x;
+buf2[bufposW] = x + (buf2[bufposR] * fb); 
+
+bufposR = bufposR + 1 ;
+bufposR > buflength ? bufposR = 0;
+bufposW = bufposW + 1 ;
+bufposW > buflength ? bufposW = 0;

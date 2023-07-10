@@ -1,0 +1,52 @@
+desc:KOK: Calc. P, √Ix, √Iy, √Iz from AmbiX (WYZX)
+//tags: MCE
+//author: KOK_MN
+
+slider1:0<-10, 10, 0.5> √Ix, √Iy, √Iz Gain [dB]
+
+in_pin:input01 W
+in_pin:input02 Y
+in_pin:input03 Z
+in_pin:input04 X
+out_pin:output01 P
+out_pin:output02 √Ix
+out_pin:output03 √Iy
+out_pin:output04 √Iz
+
+@init
+
+@slider
+IxyzGain = slider1;
+
+@sample
+W = spl0;
+Y = spl1;
+Z = spl2;
+X = spl3;
+
+// P, Ix, Iy, Iz
+ P = W;
+Ix = W*X;
+Iy = W*Y;
+Iz = W*Z;
+// √Ix, √Iy, √Iz
+Ix>0 ? Ix=sqrt(Ix) : Ix=-sqrt(-Ix);
+Iy>0 ? Iy=sqrt(Iy) : Iy=-sqrt(-Iy);
+Iz>0 ? Iz=sqrt(Iz) : Iz=-sqrt(-Iz);
+// Gain √Ix, √Iy, √Iz
+Ix = Ix*(10^(IxyzGain/20));
+Iy = Iy*(10^(IxyzGain/20));
+Iz = Iz*(10^(IxyzGain/20));
+// Output
+spl0 = W;
+spl1 = Ix;
+spl2 = Iy;
+spl3 = Iz;
+
+@gfx 100 16
+gfx_x=gfx_y=5;
+gfx_a=1;
+gfx_r=0; //R
+gfx_b=0; //G
+gfx_g=1; //B
+gfx_drawstr("Input:AmbiX -> Output:1P 2Sqrt(Ix) 3Sqrt(Iy) 4Sqrt(Iz)");

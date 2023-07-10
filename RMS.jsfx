@@ -1,0 +1,59 @@
+desc: RMS(my)
+
+slider1:micsec=1<1,100,1>Window Length [ms]
+
+@init
+function db2ratio(x)
+(
+  pow(10, x/20);
+);
+
+bufflen = srate * 3000/1000;
+buffL = 0;
+buffR = bufflen + 1;
+
+@slider
+winlen = srate * micsec /1000;
+writepos = winlen;
+readpos = writepos -  winlen;
+readpos < 0 ? readpos += bufflen;
+
+@sample
+n = readpos;
+
+in_L = spl0;
+in_R = spl1;
+
+buffL[writepos] = in_L;
+buffR[writepos] = in_R;
+
+(readpos < writepos)?(
+  while(n<=writepos)(
+    sigma_L += sqr(buffL[n]);
+    n += 1;
+  );
+  rms_L = sqrt(sigma_L/winlen);
+  sigma_L = 0;
+):(
+  while(n<=bufflen)(
+    sigma_Lbig += sqr(buffL[n]);
+    n += 1;
+  );
+  n = 0;
+  while(n<=writepos)(
+    sigma_Lsmall += sqr(buffL[n]);
+    n += 1;
+  );
+  rms_L = sqrt((sigma_Lbig+sigma_Lsmall)/winlen); 
+  sigma_Lbig = 0;
+  sigma_Lsmall = 0;
+);
+
+
+writepos += 1;
+writepos >= bufflen ? writepos = 0;
+readpos += 1;
+readpos >= bufflen ? readpos = 0;
+
+spl0 = spl0;
+spl1 = spl1;

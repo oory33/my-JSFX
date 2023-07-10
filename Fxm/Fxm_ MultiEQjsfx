@@ -1,0 +1,44 @@
+desc:Fxm v15.0 Multi EQ
+slider1:type=0<0,1,1{LPF, Peaking}>EQ type
+slider2:F=500<1,4000,1>Frequency [Hz]
+slider3:Q=0.7<.1,100,.1>Q
+slider4:gain=6<-24,24,0.1>Gain 4 Peaking [dB]
+
+@init
+function filt(x)(
+x0=x;
+y0=(b0/a0)*x0 + (b1/a0)*x1 + (b2/a0)*x2 - (a1/a0)*y1 - (a2/a0)*y2;
+y0;
+x2 = x1;
+x1 = x0;
+y2 = y1;
+y1 = y0;
+);
+
+@slider
+type==0 ? (
+b0=(1-cos(w0))/2;
+b1=1-cos(w0);
+b2=(1-cos(w0))/2;
+a0=1+alpha;
+a1=-2*cos(w0);
+a2=1-alpha;
+w0=2*$pi*F/srate;
+alpha=sin(w0)/(2*Q);
+):
+type==1 ? (
+A=10^(gain/40);
+b0=1+alpha*A;
+b1=-2*cos(w0);
+b2=1-alpha*A;
+a0=1+alpha/A;
+a1=-2*cos(w0);
+a2=1-alpha/A;
+w0=2*$pi*F/srate;
+alpha=sin(w0)/(2*Q/A);
+);
+
+
+@sample
+spl0=filt(spl0);
+spl1=filt(spl1);

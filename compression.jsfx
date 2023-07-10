@@ -1,0 +1,216 @@
+desc: Compressor(my)
+
+slider1:type=0<0,1,1{Peak,RMS}>Type
+slider2:cuv=0<0,2,1{cos,cos^2,Liner}>Curve
+slider3:Ths=0<-40,0,.1>Threshold[dB]
+slider4:rat=100<0,100,.1>Ratio[%]
+slider5:At=20<0,500,1>Attack[ms]
+slider6:Re=100<0,500,1>Release[ms]
+slider7:gin=0<-80,12,1>Input Gain[dB]
+slider8:Gain=0<-80,12,1>Output Gain[dB]
+slider9:bfl=1024<1,1024, 1>Buffer Length[sample]
+
+@init
+function curve(x, y)
+(
+  (cuv==0)?(
+  (y==1)?
+  (sin(x)):(y==3)?
+  (cos(x))
+  ):(cuv==1)?(
+  (y==1)?
+  (sin(x)^2):(y==3)?
+  (cos(x)^2)
+  ):(cuv==2)?(
+  (y==1)?
+  (x*2/$pi):(y==3)?
+  (1-(x*2/$pi))
+  );
+);
+
+function db2ratio(x)
+(
+  pow(10, x/20);
+);
+
+function ms2spl(x)
+(
+  srate * x / 1000;
+);
+
+function peak(x)
+(
+  in=x*db2ratio(gin);
+//trig=0; before trigger
+  (trig == 0)?(
+    out = in;
+  );
+  ((trig == 0)&&(abs(in) >= thsrt))?(
+    trig = 1;
+    countatk += 1;
+  );
+//trig=1; while attack time
+  ((trig == 1)&&(countatk<atkspl)&&(in >= 0))?(
+    out = in*ratio + (1 - ratio)*thsrt*curve(rad,trig);
+    rad += phatk;
+    countatk += 1;
+  ):((trig == 1)&&(countatk<atkspl)&&(in < 0))?(
+    out = in*ratio - (1 - ratio)*thsrt*curve(rad,trig);
+    rad += phatk;
+    countatk += 1;
+  ):((trig==1)&&(countatk>=atkspl))?(
+    trig = 2;
+    rad = 0;
+    countatk = 0;
+  );
+//trig=2; end of attack time to trigger off
+  ((trig == 2)&&(x >= 0))?(
+    out = in*ratio + (1 - ratio)*thsrt;
+  ):((trig == 2)&&(x < 0))?(
+    out = in*ratio - (1 - ratio)*thsrt;
+  );
+  ((trig==2)&&(abs(in)<thsrt))?(
+    trig = 3;
+  );
+//trig=3; while release time
+  ((trig == 3)&&(countrls<rlsspl)&&(x >= 0))?(
+    out = in*ratio + (1 - ratio)*thsrt*curve(rad,trig);
+    rad += phrls;
+    countrls += 1;
+  ):((trig == 3)&&(countrls<rlsspl)&&(x < 0))?(
+    out = in*ratio - (1 - ratio)*-1*thsrt*curve(rad,trig);
+    rad += phrls;
+    countrls += 1;
+  ):((trig == 3)&&(countrls>=rlsspl))?(
+    trig = 0;
+    rad = 0;
+    countrls = 0;
+  );
+  out;
+);
+
+function rms(x)
+(
+//compression
+  in=x*db2ratio(gin);
+  
+  (trig == 0)?(
+    out = in;
+  );
+  ((trig == 0)&&(rms >= thsrt))?(
+    trig = 1;
+    countatk += 1;
+  );
+  
+  ((trig == 1)&&(countatk<atkspl)&&(in >= 0))?(
+    out = in*ratio + (1 - ratio)*thsrt*curve(rad,trig);
+    rad += phatk;
+    countatk += 1;
+  ):((trig == 1)&&(countatk<atkspl)&&(in < 0))?(
+    out = in*ratio - (1 - ratio)*thsrt*curve(rad,trig);
+    rad += phatk;
+    countatk += 1;
+  ):((trig==1)&&(countatk>=atkspl))?(
+    trig = 2;
+    rad = 0;
+    countatk = 0;
+  );
+  
+  ((trig == 2)&&(in >= 0))?(
+    out = in*ratio + (1 - ratio)*thsrt;
+  ):((trig == 2)&&(in < 0))?(
+    out = in*ratio - (1 - ratio)*thsrt;
+  );
+  ((trig==2)&&(rms<thsrt))?(
+    trig = 3;
+  );
+  
+  ((trig == 3)&&(countrls<rlsspl)&&(x >= 0))?(
+    out = in*ratio + (1 - ratio)*thsrt*curve(rad,trig);
+    rad += phrls;
+    countrls += 1;
+  ):((trig == 3)&&(countrls<rlsspl)&&(x < 0))?(
+    out = in*ratio - (1 - ratio)*-1*thsrt*curve(rad,trig);
+    rad += phrls;
+    countrls += 1;
+  ):((trig == 3)&&(countrls>=rlsspl))?(
+    trig = 0;
+    rad = 0;
+    countrls = 0;
+  );
+  out;
+);
+
+countatk = 0;
+countrls = 0;
+
+bufflen = srate;
+buff = 0;
+
+@slider
+thsrt = db2ratio(Ths);
+atkspl = ms2spl(At);
+rlsspl = ms2spl(Re);
+ratio = rat / 100;
+sumgainrt = db2ratio(gain);
+
+phatk = ($pi / 2) /atkspl;
+phrls = ($pi / 2) /rlsspl;
+
+winlen = bfl;
+writepos = winlen;
+readpos = writepos -  winlen;
+readpos < 0 ? readpos += bufflen;
+
+@sample
+//rms
+  n = readpos;
+  
+  in = spl0;
+  
+  buff[writepos] = in;
+  
+  (readpos < writepos)?(
+    while(n<=writepos)(
+      sigma += sqr(buff[n]);
+      n += 1;
+    );
+    rms = sqrt(sigma/winlen);
+    sigma = 0;
+  ):(
+    while(n<=bufflen)(
+      sigma_big += sqr(buff[n]);
+      n += 1;
+    );
+    n = 0;
+    while(n<=writepos)(
+      sigma_small += sqr(buff[n]);
+      n += 1;
+    );
+    rms = sqrt((sigma_big+sigma_small)/winlen); 
+    sigma_big = 0;
+    sigma_small = 0;
+  );
+  
+  writepos += 1;
+  writepos >= bufflen ? writepos = 0;
+  readpos += 1;
+  readpos >= bufflen ? readpos = 0;
+
+//compression
+type==0 ? (
+spl0=peak(spl0)*sumgainrt;
+spl1=peak(spl1)*sumgainrt;
+):(
+spl0=rms(spl0)*sumgainrt;
+spl1=rms(spl1)*sumgainrt;
+);
+
+
+
+
+
+
+
+
+

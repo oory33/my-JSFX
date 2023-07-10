@@ -1,0 +1,61 @@
+desc:LPF(my)
+
+slider1:2000<1,20000,1>cut off[Hz] 
+
+@init
+bufflen = srate;
+buff1 = 0;  
+buff1R = buff1;
+buff1W = buff1R + 1;
+buff2 = buff2 + srate;
+buff2R = buff2;
+buff2W = buff2 + 1;
+
+@slider
+f1 = slider1;
+fn = srate / 2;
+ff = f1 / fn;
+fp = ff * 3.1415;
+b1 = 1;
+b2 = 0.12;
+a1 = 1;
+a2 = exp((-1) * fp);
+norm = (1 - a2) / (b1 + b2);
+b1 = b1 * norm;
+b2 = b2 * norm;
+
+@sample
+xbp = spl0;
+xdd = buff1[buff1R];
+ydd = buff2[buff2R];
+x =(xbp * b1) + (xdd * b2);
+y = x + (ydd * a2);
+spl0 = y;
+
+buff1[buff1W] = xbp;
+buff2[buff2W] = y;
+
+xbp = spl1;
+xdd = buff1[buff1R];
+ydd = buff2[buff2R];
+x =(xbp * b1) + (xdd * b2);
+y = x + (ydd * a2);
+spl1 = y;
+
+buff1[buff1W] = xbp;
+buff2[buff2W] = y;
+
+buff1R = buff1R + 1;
+buff1R > bufflen ? buff1R = 0;
+buff1W = buff1W + 1;
+buff1W > bufflen ? buff1W = 0;
+buff2R = buff2R + 1;
+buff2R > buff2 + bufflen ? buff2R = buff2;
+buff2W = buff2W + 1;
+buff2W > buff2 + bufflen ? buff2W = buff2;
+
+
+
+
+
+

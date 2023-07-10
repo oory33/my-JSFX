@@ -1,0 +1,50 @@
+desc:Schroeder Reverbration(my)
+
+slider1:30<0,100,.1>Tap1 Delay time [ms]
+slider2:0.3<0,1,.1>Tap1 Gain 
+slider3:53<0,100,.1>Tap2 Delay time [ms]
+slider4:0.5<0,1,.1>Tap2 Gain 
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+@init
+buflength = srate * 0.5;  //  500 ms
+buf1 = 0; //  buffer  exists at offset 0
+buf1posR = 0; 
+buf2 = buflength;
+buf2posR = buflength;
+ 
+@slider
+delay1 = srate * slider1 / 1000.0; //  # of samples
+g1 = slider2; 
+buf1posW = delay1;
+delay2 = srate * slider3 / 1000.0; //  # of samples
+g2 = slider4;
+buf2posW = buf2posR + delay2;
+ 
+@sample  
+x = spl0;  
+t1 = (buf1[buf1posR] * (1 - sqr(g1))) + (x * (-1) * g1); 
+buf1[buf1posW] = x + (buf1[buf1posR] * g1); 
+spl0 = (buf2[buf2posR] * (1 - sqr(g2))) + (t1 * (-1) * g2); 
+buf2[buf2posW] = t1 + (buf2[buf2posR] * g2);
+
+x = spl1;  
+t1 = (buf1[buf1posR] * (1 - sqr(g1))) + (x * (-1) * g1); 
+buf1[buf1posW] = x + (buf1[buf1posR] * g1); 
+spl1 = (buf2[buf2posR] * (1 - sqr(g2))) + (t1 * (-1) * g2); 
+buf2[buf2posW] = t1 + (buf2[buf2posR] * g2);
+
+
+buf1posR = buf1posR + 1 ;
+buf1posR > buflength ? buf1posR = 0;
+buf1posW = buf1posW + 1 ;
+buf1posW > buflength ? buf1posW = 0;
+
+buf2posR = buf2posR + 1 ;
+buf2posR > buf2 + buflength ? buf2posR = buf2;
+buf2posW = buf2posW + 1 ;
+buf2posW > buf2 + buflength ? buf2posW = buf2;

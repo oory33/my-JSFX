@@ -1,0 +1,10 @@
+desc:Demix (my)
+
+@sample
+L1=spl0;
+R1=spl1;
+L2=spl2;
+R2=spl3;
+
+spl0=L1-((L1-L2)/2);
+spl1=R1-((R1-R2)/2);

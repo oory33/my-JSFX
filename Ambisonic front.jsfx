@@ -1,0 +1,43 @@
+desc:Ambisonics MS decoder (my)
+
+slider1:degree=0<0, 180, 1.>angle[degree]
+slider2:gM=0<-60,40,.1>Gain M [dB]
+slider3:gS=0<-60,40,.1>Gain S [dB]
+slider4:gg=0<-60,40,.1>Gain [dB]
+
+@init
+function db2ratio(x)
+(
+  pow(10, x/20);
+)
+
+@slider
+r1 = db2ratio(gM);
+r2 = db2ratio(gS);
+r3 = db2ratio(gg);
+
+@sample
+FLU=spl0;
+FRD=spl1;
+BLD=spl2;
+BRU=spl3;
+
+rad = degree * $pi / 180;
+angle = cos(rad);
+
+W = FLU + FRD + BLD + BRU;
+X = FLU + FRD - BLD - BRU;
+Y = FLU - FRD + BLD - BRU;
+Z = FLU - FRD - BLD + BRU;
+
+M = (W + X) / 2 * angle;
+S = Y;
+
+Mr = M * r1;
+Sr = S * r2;
+
+L = Mr + Sr;
+R = Mr - Sr;
+spl0 = L * r3;
+spl1 = R * r3;
+ 

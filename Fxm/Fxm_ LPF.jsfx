@@ -1,0 +1,33 @@
+desc:Fxm v13.0 LPF
+slider1:F=500<1,4000,1>Frequency [Hz]
+slider2:Q=0.7<.1,100,.1>Q
+
+
+@slider
+b0=(1-cos(w0))/2;
+b1=1-cos(w0);
+b2=(1-cos(w0))/2;
+a0=1+alpha;
+a1=-2*cos(w0);
+a2=1-alpha;
+w0=2*$pi*F/srate;
+alpha=sin(w0)/(2*Q);
+
+@sample
+x0L=spl0;
+x0R=spl1;
+
+y0L=(b0/a0)*x0L + (b1/a0)*x1L + (b2/a0)*x2L - (a1/a0)*y1L - (a2/a0)*y2L;
+y0R=(b0/a0)*x0R + (b1/a0)*x1R + (b2/a0)*x2R - (a1/a0)*y1R - (a2/a0)*y2R;
+
+spl0=y0L;
+spl1=y0R;
+
+x2L = x1L;
+x2R = x1R;
+x1L = x0L;
+x1R = x0R;
+y2L = y1L;
+y2R = y1R;
+y1L = spl0;
+y1R = spl1;

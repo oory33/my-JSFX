@@ -1,0 +1,26 @@
+desc:Fxm v4.0 Gain
+slider1:5<-60,40,.1>Gain [dB]
+in_pin:LFU
+in_pin:RFD
+in_pin:LBD
+in_pin:RBU
+out_pin:out1
+out_pin:out2
+out_pin:out3
+out_pin:out4
+
+@slider
+gain=slider1;
+
+@sample
+lev = gain;
+r = pow(10, lev/20);
+L = spl0 * r;
+R = spl1 * r;
+Ls= spl2 * r;
+Rs= spl3 * r; 
+
+spl0=L;
+spl1=R;
+spl2=Ls;
+spl3=Rs;

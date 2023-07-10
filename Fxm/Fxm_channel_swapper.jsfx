@@ -1,0 +1,7 @@
+desc:Fxm v2.0 Channel Swapper
+
+@sample
+L=spl0;
+R=spl1;
+spl0=R;
+spl1=L;

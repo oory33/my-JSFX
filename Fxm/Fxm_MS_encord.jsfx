@@ -1,0 +1,11 @@
+desc:Fxm v5.0 MS Decoder
+
+@sample
+inMid=spl0;
+inSide=spl1;
+
+L = inMid + inSide;
+R = inMid - inSide;
+
+spl0=L;
+spl1=R;

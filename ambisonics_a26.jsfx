@@ -1,0 +1,83 @@
+desc:Ambisonics A to 6ch(my)
+
+slider1:0.3<0, 1, .01>A to B Gain
+slider2:3<0, 10,.1>B to Intensity Gain
+slider3:1<0, 100,.01>Cutoff [Hz]
+
+@init
+ax1 = 0;
+bx1 = 0;
+ay1 = 0;
+by1 = 0;
+az1 = 0;
+bz2 = 0;
+
+@slider
+gain1 = slider1;
+gain2 = slider2;
+wid = 2.0 * $pi * slider3 / srate;
+beta = 0.5 * (( 1.0 - sin(wid) ) / ( 1.0 + sin(wid) ));
+gamma = ( 0.5 + beta ) * cos(wid);
+alpha = ( 1.0 - gamma ) / 2.0;
+
+
+@sample
+FLU = spl0; 
+FRD = spl1;
+BLD = spl2;
+BRU = spl3;
+W = (FLU + FRD + BLD + BRU) * gain1; 
+X = (FLU + FRD - BLD - BRU) * gain1;
+Y = -1 * (FLU - FRD + BLD - BRU) * gain1;
+Z = (FLU - FRD - BLD + BRU) * gain1;
+ 
+p = W * gain2;
+bIx = W * Y * gain2;  
+bIy = W * X * gain2;
+bIz = W * Z * gain2;
+
+ax = bIx;
+bx = alpha * ( ax + ax1) + gamma * bx1;
+ax1 = ax;
+bx1 = bx;
+Ix = bx;
+
+ay = bIy;
+by = alpha * ( ay + ay1) + gamma * by1;
+ay1 = ay;
+by1 = by;
+Iy = by;
+
+az = bIz;
+bz = alpha * ( az + az1) + gamma * bz1;
+az1 = az;
+bz1 = bz;
+Iz = bz;
+
+
+
+Ix >= 0 ? Ix_p = Ix;
+right = p * sqrt(Ix_p);
+spl1 = right;
+
+Ix < 0 ? Ix_n = Ix;
+left = P * sqrt(Ix_n); 
+spl0 = left;
+
+Iy >= 0 ? Iy_p = Iy;
+front = p * sqrt(Iy_p); 
+spl2 = front;
+
+Iy < 0 ? Iy_n = Iy;
+back = P * sqrt(Iy_n);
+spl3 = back;
+
+Iz >= 0 ? Iz_p = Iz;
+top = p * sqrt(Iz_p);
+spl4 = top;
+ 
+Iz < 0 ? Iz_n = Iz;
+bottom = P * sqrt(Iz_n);
+spl5 = bottom;
+ 
+

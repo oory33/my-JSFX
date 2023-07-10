@@ -1,0 +1,21 @@
+desc:Fxm v7.0 Ambisonics A2B Decoder
+slider1:0.5<0,1,.01>A2B gain
+@slider
+gain1 = slider1;
+
+@sample
+FLU=spl0;
+FRD=spl1;
+BLD=spl2;
+BRU=spl3;
+
+
+W = FLU + FRD + BLD + BRU;
+X = FLU + FRD - BLD - BRU;
+Y = FLU - FRD + BLD - BRU;
+Z = FLU - FRD - BLD + BRU;
+ 
+spl0=W*gain1;
+spl1=X*gain1;
+spl2=Y*gain1;
+spl3=Z*gain1;

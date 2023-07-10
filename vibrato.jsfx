@@ -1,0 +1,53 @@
+desc: Vibrato(my)
+
+slider1:F=4<0,100,.1>Rate[Hz]
+slider2:A=15<0,100,.1>Depth[%]
+slider3:Rt=100<0,100,1>Wet/Dry[%]
+slider4:gain=-4<-80,40,.1>Gain[dB]
+slider5:delaytime=100<0,1000,1>Delay Time[ms]
+
+@init
+function db2ratio(x)
+(
+  pow(10, x/20);
+);
+
+function wave(x)
+(
+  A/100 * sin(x)
+);
+t = 0;
+
+buff_len = srate*3 + 1;
+buff_L = 0;
+buff_R = buff_len + 1;
+write_pos = length;
+
+
+@slider
+rad = (2*$pi*F) / srate;  
+length = srate * delaytime / 1000;
+read_pos = write_pos - length;
+ps = (Rt/100) * ($pi/2);
+ 
+@sample
+in_L=spl0;
+in_R=spl1;
+
+w=wave(t);
+
+buff_L[write_pos] = in_L;
+buff_R[write_pos] = in_R;
+
+out_L=in_L*cos(ps)^2 + buff_L[read_pos]*sin(ps)^2;
+out_R=in_R*cos(ps)^2 + buff_R[read_pos]*sin(ps)^2;
+
+spl0=out_L*db2ratio(gain);
+spl1=out_R*db2ratio(gain);
+
+write_pos = write_pos + 1;
+write_pos > buff_len ? write_pos = 0;
+read_pos = read_pos + 1 + wave(t) ;
+read_pos > buff_len ? read_pos = 0;
+t = t + rad;
+

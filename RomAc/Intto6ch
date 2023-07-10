@@ -1,0 +1,73 @@
+desc:KOK: Calc. ±X/±Y/±Z from P, √Ix, √Iy, √Iz
+//tags: MCE
+//author: KOK_MN
+
+slider1:0<0, 60, 1>  Gain [dB]
+
+in_pin:input01 P
+in_pin:input02 √Ix
+in_pin:input03 √Iy
+in_pin:input04 √Iz
+out_pin:output01 +x(front)
+out_pin:output02 -x(back)
+out_pin:output03 +y(left)
+out_pin:output04 -y(right)
+out_pin:output05 +z(top)
+out_pin:output06 -z(bottom)
+
+@init
+ front = 0;
+  back = 0;
+  left = 0;
+ right = 0;
+   top = 0;
+bottom = 0;
+
+@slider
+Gain = slider1;
+
+@sample
+ P = spl0;
+Ix = spl1;
+Iy = spl2;
+Iz = spl3;
+
+Ix>=0 ? (
+    front = P*Ix;
+     back = 0;)
+  :(front = 0;
+     back = P*(-Ix));
+    
+Iy>=0 ? (
+     left = P*Iy;
+    right = 0;)
+  :( left = 0;
+    right = P*(-Iy));
+    
+Iz>=0 ? (
+       top = P*Iz;
+    bottom = 0;)
+  :(   top = 0;
+    bottom = P*(-Iz));
+    
+ front =  front*(10^(Gain/20));
+  back =   back*(10^(Gain/20));
+  left =   left*(10^(Gain/20));
+ right =  right*(10^(Gain/20));
+   top =    top*(10^(Gain/20));
+bottom = bottom*(10^(Gain/20));
+    
+spl0 = front;
+spl1 = back;
+spl2 = left;
+spl3 = right;
+spl4 = top;
+spl5 = bottom;
+
+@gfx 100 16
+gfx_x=gfx_y=5;
+gfx_a=1;
+gfx_r=0; //R
+gfx_b=0; //G
+gfx_g=1; //B
+gfx_drawstr("Input:1P 2Sqrt(Ix) 3Sqrt(Iy) 4Sqrt(Iz) -> Output:1+X 2-X 3+Y 4-Y 5+Z 6-Z");

@@ -1,0 +1,15 @@
+desc:Fxm v11.0 Panpod
+
+slider1:pan=0<-100,100,1>Pan
+
+@init
+
+@slider
+phase = ((pan+100)/200) * ($pi/2);
+
+@sample
+L=spl0;
+R=spl1;
+
+spl0=L*cos(phase);
+spl1=R*sin(phase);

@@ -1,0 +1,50 @@
+desc:Fxm v10.0 Oscillatar
+slider1:0<0,3,1{Sine, Saw, Square, White}>Wave Shape
+slider2:440<0,16000,1>frequency[dB]
+slider3:-80<-80,40,.1>Gain [dB]
+
+@init
+function db2ratio(x)
+(
+  pow(10, x/20);
+);
+
+function frac(s)
+(
+cycle=t/(2*$pi);
+cycleint = floor(cycle);
+cycle - cycleint;
+);
+
+function ocl(x,y)
+(
+x==0 ? sin(y):
+x==1 ? 2*frac(y)-1:
+//(2/$pi)*(sin(y)+(sin(2*y))/2+(sin(3*y))/3+(sin(4*y))/4+(sin(5*y)/5)
+//+(sin(6*y)/6)+(sin(7*y)/7)+(sin(8*y)/8)+(sin(9*y)/9)+(sin(10*y)/10)):
+
+x==2 ? (sin(y)>=0 ? 1 : -1):
+
+x==3 ? (rand()-1)
+
+);
+
+t=0;
+
+@slider
+f=slider2;
+g=slider3;
+rad=(2*$pi*f)/srate;
+//radian per sample
+
+shape=slider1;
+r=db2ratio(g);
+
+@sample
+
+spl0=spl0+ocl(shape,t)*r;
+spl1=spl1+ocl(shape,t)*r;
+
+t= t + rad;
+
+

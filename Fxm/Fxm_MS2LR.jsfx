@@ -1,0 +1,31 @@
+desc:Fxm v9.0 MS2LR
+slider1:0<-60,40,.1>Gain M [dB]
+slider2:0<-60,40,.1>Gain S [dB]
+slider3:0<-60,40,.1>Gain [dB]
+
+@init
+function db2ratio(x)
+(
+  pow(10, x/20);
+)
+
+@slider
+r1 = db2ratio(slider1);
+r2 = db2ratio(slider2);
+r3 = db2ratio(slider3);
+
+
+@sample
+inL=spl0;
+inR=spl1;
+
+M = inL;
+S = inR;
+Mr = M * r1;
+Sr = S * r2;
+
+L = Mr + Sr;
+R = Mr - Sr;
+
+spl0=L * r3;
+spl1=R * r3;

@@ -1,0 +1,11 @@
+desc:Fxm v3.0 Devocal
+
+@sample
+L=spl0;
+R=spl1;
+x=spl2;
+y=spl3;
+
+
+spl0=L-x;
+spl1=R-y;

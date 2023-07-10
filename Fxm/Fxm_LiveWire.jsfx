@@ -1,0 +1,24 @@
+desc:Fxm v1.0 LiveWire patch cable
+
+/slider1:0<0,100,1>parameter1
+/slider2:0<0,100,1>parameter2
+/slider3:0<0,100,1>parameter3
+/slider4:0<0,100,1>parameter4
+/slider5:0<0,100,1>parameter5
+
+
+@init
+//load when fx is booted
+
+@slider
+//load when slider is changed
+
+@block
+//everytime;each block;default 512 samples
+
+@sample
+//everytime;each sample
+//spl0;sample channel 0
+
+spl0 = (spl0 + spl2 + spl4 + spl6)/3;
+spl1 = (spl1 + spl3 + spl5 + spl7)/3;

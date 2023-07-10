@@ -1,0 +1,11 @@
+desc:Fxm v6.0 MS Encoder
+
+@sample
+inL=spl0;
+inR=spl1;
+
+L = inL + inR;
+R = inL - inR;
+
+spl0=L;
+spl1=R;

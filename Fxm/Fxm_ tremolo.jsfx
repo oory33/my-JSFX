@@ -1,0 +1,33 @@
+desc:Fxm v12.0 Tremolo
+
+slider1:F=0<0,100,.1>Rate[Hz]
+slider2:A=0<0,100,1>Depth[%]
+slider3:gain=-80<-80,40,.1>Gain[dB]
+
+@init
+function db2ratio(x)
+(
+  pow(10, x/20);
+);
+
+function wave(x)
+(
+  (A/100) * sin(x)/2 + midline
+);
+t = 0;
+
+@slider
+rad = (2*$pi*F) / srate;
+midline = 1 - (A / 100 / 2); 
+
+@sample
+L=spl0;
+R=spl1;
+
+outL=L*wave(t);
+outR=R*wave(t);
+
+spl0=outL*db2ratio(gain);
+spl1=outR*db2ratio(gain);
+t = t + rad;
+

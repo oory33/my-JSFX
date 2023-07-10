@@ -1,0 +1,171 @@
+desc:4th order FDN Reverberator with LPF(my)
+
+slider1:60<1,500,.1>C1 Delay time [ms]
+slider2:0.7<0, 1,.1>C1 Gain 
+slider3:51<1,500,.1>C2 Delay time [ms]
+slider4:0.6<0, 1,.1>C2 Gain
+slider5:53<1,500,.1>C3 Delay time [ms]
+slider6:0.7<0, 1,.1>C3 Gain
+slider7:98<1,500,.1>C4 Delay time [ms]
+slider8:0.6<0, 1,.1>C4 Gain
+slider9:2000<1,20000,1>cut off[Hz]
+slider10:0.6<0, 1, .01>mix
+slider11:0.8<0, 1, .01>Master Gain 
+
+in_pin:fxin_L
+in_pin:fxin_R
+out_pin:fxout_L
+out_pin:fxout_R
+
+@init
+//buffer for feed back
+buflength = srate * 0.5;  //  500 ms
+buf1 = 0; //  buffer  exists at offset 0
+buf1posR = 0; 
+buf1posW = 1913;
+buf2 = buf1 + buflength;
+buf2posR = buf2; 
+buf2posW = buf2 + 1733;
+buf3 = buf2 + buflength;
+buf3posR = buf3; 
+buf3posW = buf3 + 1597;
+buf4 = buf3 + buflength;
+buf4posR = buf4; 
+buf4posW = buf4 + 1448;
+
+// buffer for LPF
+bc1f1 = buf4 + buflength;  
+bc1f1R = bc1f1;
+bc1f1W = bc1f1R + 1;
+bc1f2 = bc1f1 + buflength;
+bc1f2R = bc1f2;
+bc1f2W = bc1f2 + 1;
+
+gm = 1 / sqrt(2);
+gn = -1 * gm;
+
+@slider
+delay1 = srate * slider1 / 1000.0;
+delay2 = srate * slider3 / 1000.0;
+delay3 = srate * slider5 / 1000.0;
+delay4 = srate * slider7 / 1000.0;
+buf1posW = buf1posR + ceil(delay1);
+buf2posW = buf2posR + ceil(delay2);
+buf3posW = buf3posR + ceil(delay3);
+buf4posW = buf4posR + ceil(delay4);
+
+f1 = slider9;
+fn = srate / 2;
+ff = f1 / fn;
+fp = ff * 3.1415;
+b1 = 1;
+b2 = 0.12;
+a1 = 1;
+a2 = exp((-1) * fp);
+norm = (1 - a2) / (b1 + b2);
+b1 = b1 * norm;
+b2 = b2 * norm;
+
+g1 = slider2;
+g2 = slider4;
+g3 = slider6;
+g4 = slider8;
+g = slider11; 
+r = slider10;
+
+
+@sample  
+x = spl0;
+
+//LPF
+x1bp = x;
+x1dd = bc1f1[bc1f1R];
+y1dd = bc1f2[bc1f2R];
+x1 =(x1bp * b1) + (x1dd * b2);
+y1 = x1 + (y1dd * a2);
+x = y1;
+bc1f1[bc1f1W] = x1bp;
+bc1f2[bc1f2W] = y1;
+ 
+c1 = buf1[buf1posR];
+c2 = buf2[buf2posR];
+c3 = buf3[buf3posR];
+c4 = buf4[buf4posR];
+
+//feed back delay; multiple matrix 
+d1 = (c2 * gm + c3 * gm) * g1;
+buf1[buf1posW] = x + d1;
+d2 = (c1 * gn + c4 * gn) * g2; 
+buf2[buf2posW] = x + d2;
+d3 = (c1 * gm + c4 * gn) * g3;
+buf3[buf3posW] = x + d3;
+d4 = (c2 * gm + c3 * gn) * g4;
+buf4[buf4posW] = x + d4;
+ 
+ com = (c1 + c2 + c3 + c4) / 4;
+ 
+
+spl0 = (x * (1 - r) + (com * r)) * g;
+
+//R_channel
+x = spl1;
+
+//LPF
+x1bp = x;
+x1dd = bc1f1[bc1f1R];
+y1dd = bc1f2[bc1f2R];
+x1 =(x1bp * b1) + (x1dd * b2);
+y1 = x1 + (y1dd * a2);
+x = y1;
+bc1f1[bc1f1W] = x1bp;
+bc1f2[bc1f2W] = y1;
+ 
+c1 = buf1[buf1posR];
+c2 = buf2[buf2posR];
+c3 = buf3[buf3posR];
+c4 = buf4[buf4posR];
+
+//feed back delay; multiole matrix 
+d1 = (c2 * gm + c3 * gm) * g1;
+buf1[buf1posW] = x + d1;
+d2 = (c1 * gn + c4 * gn) * g2; 
+buf2[buf2posW] = x + d2;
+d3 = (c1 * gm + c4 * gn) * g3;
+buf3[buf3posW] = x + d3;
+d4 = (c2 * gm + c3 * gn) * g4;
+buf4[buf4posW] = x + d4;
+
+ com = (c1 + c2 + c3 + c4) / 4;
+ 
+
+spl1 = (x * (1 - r) + (com * r)) * g;
+
+
+buf1posR = buf1posR + 1 ;
+buf1posR > buflength ? buf1posR = 0;
+buf1posW = buf1posW + 1 ;
+buf1posW > buflength ? buf1posW = 0;
+
+buf2posR = buf2posR + 1 ;
+buf2posR > buf2 + buflength ? buf2posR = buf2;
+buf2posW = buf2posW + 1 ;
+buf2posW > buf2 + buflength ? buf2posW = buf2;
+
+buf3posR = buf3posR + 1 ;
+buf3posR > buf3 + buflength ? buf3posR = buf3;
+buf3posW = buf3posW + 1 ;
+buf3posW > buf3 + buflength ? buf3posW = buf3;
+
+buf4posR = buf4posR + 1 ;
+buf4posR > buf4 + buflength ? buf4posR = buf4;
+buf4posW = buf4posW + 1 ;
+buf4posW > buf4 + buflength ? buf4posW = buf4;
+
+bc1f1R = bc1f1R + 1 ;
+bc1f1R > bc1f1 + buflength ? bc1f1R = bc1f1;
+bc1f1W = bc1f1W + 1 ;
+bc1f1W > bc1f1 + buflength ? bc1f1W = bc1f1;
+bc1f2R = bc1f2R + 1 ;
+bc1f2R > bc1f2 + buflength ? bc1f2R = bc1f2;
+bc1f2W = bc1f2W + 1 ;
+bc1f2W > bc1f2 + buflength ? bc1f2W = bc1f2;
